@@ -1,0 +1,3 @@
+D:/OOP assignments/a3-4-913-Hornea-Dorian-Alexandru/cmake-build-debug/CMakeFiles/a3_4_913_Hornea_Dorian_Alexandru.dir
+D:/OOP assignments/a3-4-913-Hornea-Dorian-Alexandru/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/OOP assignments/a3-4-913-Hornea-Dorian-Alexandru/cmake-build-debug/CMakeFiles/rebuild_cache.dir
