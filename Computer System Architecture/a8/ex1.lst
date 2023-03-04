@@ -1,0 +1,41 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; 3. Two natural numbers a and b (a, b: dword, defined in the data segment) are given. Calculate their sum and display the result in the following format: "<a> + <b> = <result>". Example: "1 + 2 = 3". The values wil
+     4                                  
+     5                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     6                                  global start        
+     7                                  
+     8                                  ; declare external functions needed by our program
+     9                                  extern exit, printf               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    12                                  import printf msvcrt.dll
+    13                                  
+    14                                  ; our data is declared here (the variables needed by our program)
+    15                                  segment data use32 class=data
+    16                                      ; ...
+    17 00000000 05000000                    a dd 5d
+    18 00000004 07000000                    b dd 7d
+    19 00000008 2564202B202564203D-         format db "%d + %d = %d", 0
+    19 00000011 20256400           
+    20                                  
+    21                                  ; our code starts here
+    22                                  segment code use32 class=code
+    23                                      start:
+    24                                          ; ...
+    25 00000000 A1[00000000]                    mov eax, [a]
+    26 00000005 8B1D[04000000]                  mov ebx, [b]
+    27 0000000B 8B0D[00000000]                  mov ecx, [a]
+    28 00000011 01D9                            add ecx, ebx
+    29 00000013 51                              push dword ecx
+    30 00000014 53                              push dword ebx
+    31 00000015 50                              push dword eax
+    32 00000016 68[08000000]                    push dword format
+    33 0000001B FF15[00000000]                  call [printf]
+    34                                          
+    35 00000021 83C410                          add esp, 4*4; we clear the stack after calling the printf function
+    36                                      
+    37                                      
+    38                                          ; exit(0)
+    39 00000024 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    40 00000026 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

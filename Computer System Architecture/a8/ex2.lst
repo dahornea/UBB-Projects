@@ -1,0 +1,109 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; 18. A text file is given. The text contains letters, spaces and points. Read the content of the file, determine the number of words and display the result on the screen. (A word is a sequence of characters separat
+     4                                  
+     5                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     6                                  global start        
+     7                                  
+     8                                  ; declare external functions needed by our program
+     9                                  extern exit, fopen, fread, fclose, printf               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    12                                  import fopen msvcrt.dll
+    13                                  import fread msvcrt.dll
+    14                                  import fclose msvcrt.dll
+    15                                  import printf msvcrt.dll
+    16                                                            
+    17                                  ; our data is declared here (the variables needed by our program)
+    18                                  segment data use32 class=data
+    19                                      ; ...
+    20 00000000 746578742E74787400          file_name db "text.txt", 0
+    21 00000009 7200                        access_mode db "r", 0; read access mode
+    22                                      
+    23 0000000B FFFFFFFF                    file_descriptor dd -1
+    24                                      len equ 100
+    25 0000000F 00<rept>                    text times len db 0; the variable in which we'll read the text from the file
+    26                                      
+    27 00000073 546865726520617265-         format db "There are %d words in the file", 0
+    27 0000007C 20256420776F726473-
+    27 00000085 20696E207468652066-
+    27 0000008E 696C6500           
+    28 00000092 0000                        counter dw 0
+    29                                  ; our code starts here
+    30                                  segment code use32 class=code
+    31                                      start:
+    32                                          ; ...
+    33 00000000 68[09000000]                    push dword access_mode
+    34 00000005 68[00000000]                    push dword file_name
+    35 0000000A FF15[00000000]                  call [fopen]; we open the file in read mode
+    36 00000010 83C408                          add esp, 4*2; clear the stack
+    37                                          
+    38 00000013 A3[0B000000]                    mov [file_descriptor], eax
+    39                                          
+    40 00000018 83F800                          cmp eax, 0
+    41 0000001B 7471                            je final; if eax is 0 then we end the program because we got an error
+    42                                          
+    43 0000001D FF35[0B000000]                  push dword [file_descriptor]
+    44 00000023 6A64                            push dword len
+    45 00000025 6A01                            push dword 1
+    46 00000027 68[0F000000]                    push dword text
+    47 0000002C FF15[00000000]                  call [fread]; we start reading from the file. The number of characters will be stored in EAX
+    48                                          
+    49 00000032 89C1                            mov ECX, eax
+    50 00000034 BB00000000                      mov ebx, 0
+    51 00000039 BA00000000                      mov edx, 0
+    52 0000003E BE00000000                      mov esi, 0
+    53 00000043 E317                            jecxz end_space 
+    54                                          
+    55                                          check_space: ; loop to check for space
+    56 00000045 83F900                              cmp ecx, 0; we compare ecx to 0 to prevent the loop from running forever
+    57 00000048 7412                                je end_space
+    58 0000004A 8A93[0F000000]                      mov dl, [text+ebx]
+    59 00000050 80FA20                              cmp dl, ' '
+    60 00000053 7403                                je found_space
+    61 00000055 43                                  inc ebx
+    62 00000056 E2ED                            loop check_space
+    63                                          
+    64                                          found_space:
+    65 00000058 46                                  inc esi; we increase esi if we find a space
+    66 00000059 43                                  inc ebx
+    67 0000005A EBE9                                jmp check_space
+    68                                              
+    69                                          end_space:
+    70                                          
+    71 0000005C 89C1                            mov ECX, eax; we move the length back into ecx to check the file again
+    72 0000005E BB00000000                      mov ebx, 0
+    73 00000063 E317                            jecxz end_dot
+    74                                          
+    75                                          check_dot:; loop to check for the dots in the file
+    76 00000065 8A93[0F000000]                      mov dl, [text+ebx]
+    77 0000006B 80FA2E                              cmp dl, '.'
+    78 0000006E 7408                                je found_dot
+    79 00000070 43                                  inc ebx
+    80 00000071 E2F2                            loop check_dot
+    81                                          
+    82 00000073 83F900                          cmp ecx, 0; we compare ecx to 0 again to jump over "found_dot"
+    83 00000076 7404                            je end_dot
+    84                                          found_dot:
+    85 00000078 46                                  inc esi; we increase esi if we find a dot
+    86 00000079 43                                  inc ebx
+    87 0000007A EBE9                                jmp check_dot
+    88                                              
+    89                                          end_dot:    
+    90                                              
+    91 0000007C 83C410                          add esp, 4*4
+    92 0000007F FF35[0B000000]                  push dword[file_descriptor]
+    93 00000085 FF15[00000000]                  call [fclose]; we close the file
+    94 0000008B 83C404                          add esp, 4
+    95                                          
+    96                                          ;Now we display the number
+    97                                          final:
+    98 0000008E 56                              push dword esi
+    99 0000008F 68[73000000]                    push dword format
+   100 00000094 FF15[00000000]                  call [printf]; we call the printf function to display the number of words in our file
+   101                                          
+   102 0000009A 83C408                          add esp, 4*2
+   103                                          
+   104                                          ; exit(0)
+   105 0000009D 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   106 0000009F FF15[00000000]                  call    [exit]       ; call exit to terminate the program

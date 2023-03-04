@@ -1,0 +1,51 @@
+     1                                  bits 32
+     2                                  global start
+     3                                  
+     4                                  extern exit
+     5                                  import exit msvcrt.dll
+     6                                  
+     7                                  ; 4. A byte string s is given. Build the byte string d such that every byte d[i] is equal to the count of ones in the corresponding byte s[i] of s.
+     8                                  ; Example:
+     9                                  ; s: 5, 25, 55, 127
+    10                                  ; in binary:
+    11                                  ; 101, 11001, 110111, 1111111
+    12                                  ; d: 2, 3, 5, 7
+    13                                  
+    14                                  segment data use32 class=data
+    15 00000000 0519377F                    s db 5, 25, 55, 127
+    16                                      len equ $-s
+    17 00000004 <res 00000004>              d resb len
+    18                                  
+    19                                  segment code use32 class=code
+    20                                  start:
+    21 00000000 B904000000                  mov ecx, len ; load the number of elements of s into ecx
+    22 00000005 E31F                        jecxz end_program ; jump to the end if ecx is 0
+    23                                  
+    24 00000007 BE[00000000]                mov esi, s ; load the offset of the s string into esi
+    25 0000000C BF[04000000]                mov edi, d ; load the ofsset of the d string into edi
+    26                                      
+    27 00000011 FC                          CLD
+    28                                      loop_string:
+    29 00000012 AC                              LODSB
+    30 00000013 31DB                            xor ebx, ebx ; clear the ebx register because we will count with it
+    31                                          ; xor ebx, ebx  is faster than  mov ebx, 0
+    32                                          
+    33                                          
+    34 00000015 D0E8                            shr al, 1 ; move rightmost bit to carry flag
+    35                                          
+    36                                          count_ones:
+    37 00000017 80D300                          adc bl, 0 ; add with carry
+    38 0000001A D0E8                            shr al, 1 ; move rightmost bit to carry flag
+    39 0000001C 75F9                            jnz count_ones ; loop while ZF=1
+    40                                          
+    41 0000001E 80D300                          adc bl, 0 ; count last bit
+    42                                          
+    43 00000021 88D8                            mov al, bl ; move the count into al in preparation for the next instruction
+    44 00000023 AA                              STOSB ; add the count of 1's into d        
+    45 00000024 E2EC                        loop loop_string
+    46                                      
+    47                                      end_program: ; program end label
+    48                                      
+    49                                      ; exit(0)
+    50 00000026 6A00                        push    dword 0      ; push the parameter for exit onto the stack
+    51 00000028 FF15[00000000]              call    [exit]       ; call exit to terminate the program

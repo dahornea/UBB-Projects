@@ -1,0 +1,33 @@
+     1                                  bits 32
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit, printf
+     6                                  import exit msvcrt.dll
+     7                                  import printf msvcrt.dll
+     8                                  
+     9                                  segment data use32 class=data
+    10 00000000 FCFFFFFF                    a dd -4
+    11 00000004 06000000                    b dd 6
+    12 00000008 2564202A202564203D-         format db "%d * %d = %d", 0
+    12 00000011 20256400           
+    13                                  
+    14                                  segment code use32 class=code
+    15                                  start:
+    16 00000000 A1[00000000]                mov eax, [a]    ; move a into eax
+    17 00000005 8B1D[04000000]              mov ebx, [b]    ; move b into ebx
+    18 0000000B F7EB                        imul ebx        ; do the multiplication, result in edx:eax
+    19                                      
+    20                                      ; call printf() to display the result
+    21                                      ; int printf(const char * format, variable_1, constant_2, ...);
+    22 0000000D 50                          push dword eax
+    23 0000000E FF35[04000000]              push dword [b]
+    24 00000014 FF35[00000000]              push dword [a]
+    25                                      
+    26 0000001A 68[08000000]                push dword format
+    27 0000001F FF15[00000000]              call [printf]
+    28 00000025 83C410                      add esp, 4 * 4  ; clean-up the stack
+    29                                      
+    30                                      ; exit(0)
+    31 00000028 6A00                        push dword 0      
+    32 0000002A FF15[00000000]              call [exit]

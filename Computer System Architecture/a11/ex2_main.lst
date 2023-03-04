@@ -1,0 +1,59 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; 18.Read from file numbers.txt a string of numbers (positive and negative). Build two strings using readen numbers:
+     4                                  ;   P – only with positive numbers
+     5                                  ;   N – only with negative numbers
+     6                                  ;   Display the strings on the screen.
+     7                                  
+     8                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     9                                  global start        
+    10                                  
+    11                                  ; declare external functions needed by our program
+    12                                  extern exit, fopen, fread, fclose, printf  ; tell nasm that exit exists even if we won't be defining it
+    13                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    14                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    15                                  import fopen msvcrt.dll
+    16                                  import fread msvcrt.dll
+    17                                  import fclose msvcrt.dll
+    18                                  import printf msvcrt.dll
+    19                                  extern module
+    20                                  
+    21                                  ; our data is declared here (the variables needed by our program)
+    22                                  segment data use32 class=data
+    23                                      ; ...
+    24 00000000 6E756D626572732E74-         file_name db "numbers.txt", 0
+    24 00000009 787400             
+    25 0000000C 7200                        access_mode db "r", 0
+    26 0000000E FFFFFFFF                    file_descriptor dd -1
+    27                                      len equ 100
+    28 00000012 00<rept>                    text times len db 0; the variable in which we'll read the text from the file
+    29                                      
+    30 00000076 503A20257300                format_positive db "P: %s", 0
+    31 0000007C 4E3A20257300                format_negative db "N: %s", 0
+    32                                  ; our code starts here
+    33                                  segment code use32 class=code
+    34                                      start:
+    35                                          ; ...
+    36 00000000 68[0C000000]                    push dword access_mode
+    37 00000005 68[00000000]                    push dword file_name
+    38 0000000A FF15[00000000]                  call [fopen]
+    39 00000010 83C408                          add esp, 4*2; clear the stack
+    40                                          
+    41 00000013 A3[0E000000]                    mov [file_descriptor], eax
+    42                                          
+    43 00000018 83F800                          cmp eax, 0
+    44 0000001B 7420                            je final
+    45                                          
+    46 0000001D FF35[0E000000]                  push dword [file_descriptor]
+    47 00000023 6A64                            push dword len
+    48 00000025 6A01                            push dword 1
+    49 00000027 68[12000000]                    push dword text
+    50 0000002C FF15[00000000]                  call [fread]
+    51                                          
+    52 00000032 FF35[12000000]                  push dword[text]
+    53 00000038 E8(00000000)                    call module
+    54                                          
+    55                                          final:
+    56                                          ; exit(0)
+    57 0000003D 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    58 0000003F FF15[00000000]                  call    [exit]       ; call exit to terminate the program

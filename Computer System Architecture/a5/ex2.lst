@@ -1,0 +1,51 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; Two byte strings A and B are given. Obtain the string R that contains only the odd positive elements of the two strings.
+     4                                  
+     5                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     6                                  global start        
+     7                                  
+     8                                  ; declare external functions needed by our program
+     9                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15                                      ; ...
+    16 00000000 3231332D33                  a db '2', '1', '3', '-3'
+    17                                      a1 equ $-a
+    18 00000005 34352D3537                  b db '4', '5', '-5', '7'
+    19                                      b1 equ $-b
+    20 0000000A 00                          r times 1 db 0
+    21                                      
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                          ; ...
+    26 00000000 B904000000                      mov ECX, a1-1
+    27 00000005 BE00000000                      mov ESI, 0
+    28 0000000A E319                            jecxz Final
+    29                                          Loop1:
+    30 0000000C 8A86[00000000]                      mov al, [a+esi]
+    31 00000012 A801                                test al, 1
+    32 00000014 7B02                                jpo oddd
+    33 00000016 7F02                                jg positiv
+    34                                              
+    35                                              oddd:
+    36                                              ;if element is odd:
+    37 00000018 EB00                                jmp positiv
+    38                                              
+    39                                              positiv:
+    40                                              ;if element is positive:
+    41 0000001A 8886[0A000000]                      mov [r+esi], al
+    42 00000020 EB00                                jmp increase
+    43                                              
+    44                                              increase:
+    45 00000022 46                                  inc esi
+    46                                          
+    47 00000023 E2E7                            loop Loop1
+    48                                          Final:
+    49                                          ; exit(0)
+    50 00000025 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    51 00000027 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

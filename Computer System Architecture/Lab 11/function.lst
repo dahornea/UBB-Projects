@@ -1,0 +1,89 @@
+     1                                  bits 32
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit, fopen, fread, fclose, printf
+     6                                  import exit msvcrt.dll
+     7                                  import fopen msvcrt.dll
+     8                                  import fread msvcrt.dll
+     9                                  import fclose msvcrt.dll
+    10                                  import printf msvcrt.dll
+    11                                  
+    12                                  ;  A text file is given. Read the content of the file, count the number of odd digits and display the result on the screen. The name of text file is defined in the data segment.
+    13                                  
+    14                                  segment data use32 class=data
+    15 00000000 6E756D6265722E7478-         file_name db "number.txt", 0    ; filename to be read
+    15 00000009 7400               
+    16 0000000B 7200                        access_mode db "r", 0           ; file access mode:
+    17 0000000D FFFFFFFF                    file_descriptor dd -1           ; variable to hold the file descriptor
+    18                                      
+    19                                      len equ 9                       ; maximum number of characters to read
+    20 00000011 00<rept>                    text times len db 0             ; string to hold the text which is read from file
+    21                                      
+    22 0000001A 4E756D626572206F66-         format db "Number of odd digits: %d", 0 ; the format of the string for printf
+    22 00000023 206F64642064696769-
+    22 0000002C 74733A20256400     
+    23                                  
+    24                                  ; our code starts here
+    25                                  segment code use32 class=code
+    26                                      start:
+    27                                          ; call fopen() to create the file
+    28                                          ; fopen() will return a file descriptor in the EAX or 0 in case of error
+    29                                          ; eax = fopen(file_name, access_mode)
+    30 00000000 68[0B000000]                    push dword access_mode     
+    31 00000005 68[00000000]                    push dword file_name
+    32 0000000A FF15[00000000]                  call [fopen]
+    33 00000010 83C408                          add esp, 4 * 2  ; clean-up the stack
+    34                                  
+    35 00000013 A3[0D000000]                    mov [file_descriptor], eax  ; store the file descriptor returned by fopen
+    36                                  
+    37                                          ; check if fopen() has successfully created the file (EAX != 0)
+    38 00000018 83F800                          cmp eax, 0
+    39 0000001B 744B                            je final
+    40                                  
+    41                                          ; read the text from file using fread()
+    42                                          ; after the fread() call, EAX will contain the number of chars we've read 
+    43                                          ; eax = fread(text, 1, len, file_descriptor)
+    44 0000001D FF35[0D000000]                  push dword [file_descriptor]
+    45 00000023 6A09                            push dword len
+    46 00000025 6A01                            push dword 1
+    47 00000027 68[11000000]                    push dword text        
+    48 0000002C FF15[00000000]                  call [fread]
+    49 00000032 83C410                          add esp, 4 * 4  ; clean-up the stack
+    50                                          
+    51 00000035 89C3                            mov ebx, eax    ; save the number of read characters into ebx
+    52                                  
+    53                                          ; call fclose() to close the file
+    54                                          ; fclose(file_descriptor)
+    55 00000037 FF35[0D000000]                  push dword [file_descriptor]
+    56 0000003D FF15[00000000]                  call [fclose]
+    57 00000043 83C404                          add esp, 4 * 1  ; clean-up the stack
+    58                                          
+    59                                          
+    60 00000046 89D9                            mov ecx, ebx    ; loop x times where x is the number of read characters
+    61 00000048 E31E                            jecxz final     ; end the program if we read 0 characters
+    62                                          
+    63 0000004A 31D2                            xor edx, edx    ; initialize the odd digit counter with 0
+    64 0000004C BE[11000000]                    mov esi, text      ; initialize the string address
+    65                                          loop_string:
+    66 00000051 AC                                  lodsb
+    67 00000052 A801                                test al, 1      ; test the first bit
+    68                                              
+    69 00000054 7401                                jz next_element ; jump if zero flag (digit is even) because we only want to count odd digits
+    70 00000056 42                                  inc edx         ; incremenet the counter if the digit is odd
+    71                                              
+    72                                              next_element:
+    73 00000057 E2F8                            loop loop_string
+    74                                          
+    75                                          ; call printf() to display the result
+    76                                          ; int printf(const char * format, variable_1, constant_2, ...);
+    77 00000059 52                              push dword edx
+    78 0000005A 68[1A000000]                    push dword format
+    79 0000005F FF15[00000000]                  call [printf]
+    80 00000065 83C408                          add esp, 4 * 2  ; clean-up the stack
+    81                                          
+    82                                          final:  ; program end label
+    83                                          
+    84                                          ; exit(0)
+    85 00000068 6A00                            push dword 0
+    86 0000006A FF15[00000000]                  call [exit]

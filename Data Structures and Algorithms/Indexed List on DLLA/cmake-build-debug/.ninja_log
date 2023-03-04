@@ -1,0 +1,22 @@
+# ninja log v5
+18	143	6739183119894358	CMakeFiles/hw3_2.dir/ShortTest.cpp.obj	bebdd72fc6e626fe
+0	371	6739183122174317	CMakeFiles/hw3_2.dir/App.cpp.obj	854a2eb7fd5e78ff
+14	474	6739183123204681	CMakeFiles/hw3_2.dir/ExtendedTest.cpp.obj	84ce7616a1e6982
+14	123	6739183278840406	CMakeFiles/hw3_2.dir/ListIterator.cpp.obj	2c3b600f22b936cb
+2	134	6739183411776160	CMakeFiles/hw3_2.dir/IndexedList.cpp.obj	13f2cb32c0e3ac00
+134	253	6739183412916174	hw3_2.exe	7638a791ed08e353
+45	355	6739677488742195	CMakeFiles/hw3_2.dir/ListIterator.cpp.obj	2c3b600f22b936cb
+55	356	6739677488742195	CMakeFiles/hw3_2.dir/ShortTest.cpp.obj	bebdd72fc6e626fe
+47	356	6739677488752222	CMakeFiles/hw3_2.dir/IndexedList.cpp.obj	13f2cb32c0e3ac00
+2	518	6739677490372212	CMakeFiles/hw3_2.dir/App.cpp.obj	854a2eb7fd5e78ff
+51	588	6739677491052190	CMakeFiles/hw3_2.dir/ExtendedTest.cpp.obj	84ce7616a1e6982
+588	934	6739677494501395	hw3_2.exe	7638a791ed08e353
+2	288	6739677752204466	CMakeFiles/hw3_2.dir/App.cpp.obj	854a2eb7fd5e78ff
+289	389	6739677753190060	hw3_2.exe	7638a791ed08e353
+2	112	6739694745380995	CMakeFiles/hw3_2.dir/IndexedList.cpp.obj	13f2cb32c0e3ac00
+112	217	6739694746400996	hw3_2.exe	7638a791ed08e353
+2	113	6739730265770309	CMakeFiles/hw3_2.dir/ListIterator.cpp.obj	2c3b600f22b936cb
+114	235	6739730266950331	hw3_2.exe	7638a791ed08e353
+2	110	6739782035173826	CMakeFiles/hw3_2.dir/ListIterator.cpp.obj	2c3b600f22b936cb
+15	119	6739782035253686	CMakeFiles/hw3_2.dir/IndexedList.cpp.obj	13f2cb32c0e3ac00
+119	227	6739782036313962	hw3_2.exe	7638a791ed08e353

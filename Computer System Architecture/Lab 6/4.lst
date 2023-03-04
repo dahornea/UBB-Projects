@@ -1,0 +1,49 @@
+     1                                  bits 32
+     2                                  global start
+     3                                  
+     4                                  extern exit
+     5                                  import exit msvcrt.dll
+     6                                  
+     7                                  ; Exercise 4
+     8                                  ; Two byte strings S1 and S2 are given, having the same length. Obtain the string D in the following way: each element found on the even positions of D is the sum of the corresponding elements from S1 and S2, and ea
+     9                                      ;S1: 1, 2, 3, 4
+    10                                      ;S2: 5, 6, 7, 8
+    11                                      ;D: 6, -4, 10, -4
+    12                                      
+    13                                  segment data use32 class=data
+    14 00000000 01020304                    S1 db 1, 2, 3, 4
+    15                                      len equ $-S1 ; initialize length here before the second string to avoid dividing by 2
+    16                                      
+    17 00000004 05060708                    S2 db 5, 6, 7, 8
+    18 00000008 <res 00000004>              D resb len
+    19                                  
+    20                                  segment code use32 class=code
+    21                                  start:
+    22 00000000 B904000000                  mov ecx, len ; loop len times
+    23 00000005 E328                        jecxz end_program ; jump to end if ecx is 0
+    24                                      
+    25 00000007 BE00000000                  mov esi, 0 ; initialize string address index
+    26                                      loop_through:
+    27 0000000C 8A86[00000000]                  mov al, [S1+esi] ; move the current value from the first array to al
+    28 00000012 8A9E[04000000]                  mov bl, [S2+esi] ; move the current value from the second array to bl
+    29                                      
+    30 00000018 F7C601000000                    test esi, 1 ; check if esi is even or odd
+    31 0000001E 7504                            jnz is_odd ; if esi is odd jump to the is_odd label
+    32                                          
+    33                                          is_even: ; if esi is even continue
+    34 00000020 00D8                            add al, bl ; do the addition as per the exercise
+    35 00000022 EB02                            jmp end_loop ; jump to the end of the loop to avoid the is_odd label
+    36                                          
+    37                                          is_odd:
+    38 00000024 28D8                            sub al, bl ; do the substraction as per the exercise
+    39                                          
+    40                                          end_loop:
+    41 00000026 8886[08000000]                  mov [D+esi], al ; move the computer character into the D string at the esi position
+    42 0000002C 46                              inc esi ; increment esi to the next index
+    43 0000002D E2DD                        loop loop_through ; loop
+    44                                      
+    45                                      end_program: ; label used in case the strings are of length 0
+    46                                      
+    47                                      ; exit(0)
+    48 0000002F 6A00                        push    dword 0      ; push the parameter for exit onto the stack
+    49 00000031 FF15[00000000]              call    [exit]       ; call exit to terminate the program

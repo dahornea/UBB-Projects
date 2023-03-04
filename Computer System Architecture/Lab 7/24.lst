@@ -1,0 +1,51 @@
+     1                                  bits 32
+     2                                  global start
+     3                                  
+     4                                  extern exit
+     5                                  import exit msvcrt.dll
+     6                                  
+     7                                  segment data use32 class=data
+     8 00000000 050000000600000007-         s DD 5, 6, 7, 8, 9, 10, 11
+     8 00000009 000000080000000900-
+     8 00000012 00000A0000000B0000-
+     8 0000001B 00                 
+     9                                      len equ ($-s)/4
+    10 0000001C <res 0000001C>              d resd len
+    11                                      ; 5, 6, 9, 10
+    12                                  
+    13                                  segment code use32 class=code
+    14                                  start:
+    15 00000000 B907000000                  mov ecx, len ; load the length of s into ecx
+    16 00000005 E333                        jecxz end_program ; jump to the end if ecx is 0
+    17                                  
+    18 00000007 BE[00000000]                mov esi, s ; load the offset of the s string into esi
+    19 0000000C BF[1C000000]                mov edi, d ; load the offset of the d string into edi
+    20                                      
+    21 00000011 FC                          CLD ; clear the direction flag
+    22                                      loop_string:
+    23 00000012 AD                              LODSD ; load the value into eax
+    24                                          
+    25 00000013 BA00000000                      mov edx, 0 ; counter for number of set bits
+    26                                          
+    27 00000018 D1E8                            shr eax, 1 ; move rightmost bit to carry flag
+    28                                          count_ones:
+    29 0000001A 80D200                          adc dl, 0 ; add with carry
+    30 0000001D D1E8                            shr eax, 1 ; move rightmost bit to carry flag
+    31 0000001F 75F9                            jnz count_ones ; loop while ZF=1
+    32 00000021 80D200                          adc dl, 0 ; count last bit
+    33                                          
+    34 00000024 F6C201                          test dl, 1 ; check if the number of set bits is even or odd (lowest bit set)
+    35 00000027 750F                            jnz is_odd ; if esi is odd jump to the is_odd label (ZF=0)
+    36                                          
+    37 00000029 89F3                            mov ebx, esi ; move the count into al in preparation for the next instruction
+    38 0000002B 81EB[00000000]                  sub ebx, s
+    39 00000031 8B83[00000000]                  mov eax, [s+ebx]
+    40 00000037 AB                              STOSD ; add the count of 1's into d        
+    41                                          
+    42                                          is_odd:
+    43 00000038 E2D8                        loop loop_string
+    44                                      
+    45                                      end_program: ; program end label
+    46                                      ; exit(0)
+    47 0000003A 6A00                        push    dword 0      ; push the parameter for exit onto the stack
+    48 0000003C FF15[00000000]              call    [exit]       ; call exit to terminate the program
