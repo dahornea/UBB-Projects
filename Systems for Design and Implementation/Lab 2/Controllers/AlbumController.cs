@@ -22,18 +22,20 @@ namespace Albums.Controllers
 
         // GET: api/Album
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Album>>> GetAlbum()
+        public async Task<ActionResult<IEnumerable<AlbumDTO>>> GetAlbum()
         {
           if (_context.Album == null)
           {
               return NotFound();
           }
-            return await _context.Album.ToListAsync();
+            return await _context.Album
+                .Select(x => AlbumToDTO(x))
+                .ToListAsync();
         }
 
         // GET: api/Album/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Album>> GetAlbum(long id)
+        public async Task<ActionResult<AlbumDTO>> GetAlbum(long id)
         {
           if (_context.Album == null)
           {
@@ -46,53 +48,82 @@ namespace Albums.Controllers
                 return NotFound();
             }
 
-            return album;
+            return AlbumToDTO(album);
         }
 
         // PUT: api/Album/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAlbum(long id, Album album)
+        public async Task<IActionResult> PutAlbum(long id, AlbumDTO albumDTO)
         {
-            if (id != album.AlbumId)
+            if (id != albumDTO.AlbumId)
             {
                 return BadRequest();
             }
-
-            _context.Entry(album).State = EntityState.Modified;
-
-            try
+            var album = await _context.Album.FindAsync(id);
+            if (album == null)
             {
+                return NotFound();
+            }
+
+            //search for the artist id and return BadRequest if it is invalid
+            var artist = await _context.Artist.FindAsync(albumDTO.ArtistId);
+            if (artist == null)
+                return BadRequest();
+            
+            album.Title =  albumDTO.Title;
+            album.Genre = albumDTO.Genre;
+            album.YearOFRelease = albumDTO.YearOFRelease;
+            album.RecordLabel = albumDTO.RecordLabel;
+            album.Price = albumDTO.Price;
+            album.NumberOfTracks = albumDTO.NumberOfTracks;
+            album.ArtistId = albumDTO.ArtistId;
+            album.Artist = artist;
+
+            try{
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException) when (!AlbumExists(id))
             {
-                if (!AlbumExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
-
             return NoContent();
         }
 
         // POST: api/Album
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        //Add the corresponding artist to the Artist field of the album. The artist should be found by the artistId field of the album.
         [HttpPost]
-        public async Task<ActionResult<Album>> PostAlbum(Album album)
+        public async Task<ActionResult<AlbumDTO>> PostAlbum(AlbumDTO albumDTO)
         {
           if (_context.Album == null)
           {
               return Problem("Entity set 'ProjectContext.Album'  is null.");
           }
-            _context.Album.Add(album);
+            
+            // search for the artist id and return BadRequest if it is invalid
+            var artist = await _context.Artist.FindAsync(albumDTO.ArtistId);
+            if (artist == null)
+                return BadRequest();
+
+            var newAlbum = new Album
+            {
+                Title = albumDTO.Title,
+                Genre = albumDTO.Genre,
+                YearOFRelease = albumDTO.YearOFRelease,
+                RecordLabel = albumDTO.RecordLabel,
+                Price = albumDTO.Price,
+                NumberOfTracks = albumDTO.NumberOfTracks,
+                ArtistId = albumDTO.ArtistId,
+                Artist = artist
+            };
+            _context.Album.Add(newAlbum);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAlbum", new { id = album.AlbumId }, album);
+            return CreatedAtAction(
+                nameof(GetAlbum),
+                new { id = newAlbum.AlbumId },
+                AlbumToDTO(newAlbum));
         }
 
         // DELETE: api/Album/5
@@ -133,6 +164,19 @@ namespace Albums.Controllers
             return Ok(album);
             
 
+        }
+
+        private static AlbumDTO AlbumToDTO(Album album){
+            return new AlbumDTO{
+                AlbumId = album.AlbumId,
+                Title = album.Title,
+                Genre = album.Genre,
+                YearOFRelease = album.YearOFRelease,
+                RecordLabel = album.RecordLabel,
+                Price = album.Price,
+                NumberOfTracks = album.NumberOfTracks,
+                ArtistId = album.ArtistId
+            };
         }
     }
 }
